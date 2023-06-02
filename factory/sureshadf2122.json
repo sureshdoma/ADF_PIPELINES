@@ -1,0 +1,17 @@
+{
+	"name": "sureshadf2122",
+	"properties": {
+		"globalParameters": {
+			"emailids": {
+				"type": "string",
+				"value": "suresh.doma19@gmail.com"
+			}
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "fa6d02ae-f68b-466b-9d0a-af31286762d9",
+		"tenantId": "2645f128-4a3d-48ef-bee8-ab930fe13d28"
+	}
+}

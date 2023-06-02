@@ -1,0 +1,142 @@
+{
+	"name": "exec_email_logic",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "name",
+					"value": {
+						"value": "@pipeline().DataFactory",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "logic_app_switch_case",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"devadf": {
+							"value": "@pipeline().parameters.devadf",
+							"type": "Expression"
+						},
+						"prodadf": {
+							"value": "@pipeline().parameters.prodadf",
+							"type": "Expression"
+						},
+						"emailid": {
+							"value": "@pipeline().globalParameters.emailids",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "Hi Suresh,<br/><br/>This is an email from xyz project and the pipeline ran successfully and the data for today has been loaded in the data lake successfully.<br/><br/>Datafactory Name : @{pipeline().DataFactory}<br/>Pipeline Details : @{pipeline().Pipeline}<br/>Pipeline Run ID : @{pipeline().RunId}<br/><br/>Thanks,<br/>Team XYZ.",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-66.east",
+					"method": "POST",
+					"body": {
+						"value": "@pipeline().parameters.devadf",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline2",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "logic_app_switch_case",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"devadf": {
+							"value": "@pipeline().parameters.devadf",
+							"type": "Expression"
+						},
+						"prodadf": {
+							"value": "@pipeline().parameters.prodadf",
+							"type": "Expression"
+						},
+						"emailid": {
+							"value": "@pipeline().globalParameters.emailids",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "Hi Suresh,<br/><br/>This is an email from xyz project and the pipeline failed and the data for today has been loaded in the data lake not ingested.<br/><br/>Datafactory Name : @{pipeline().DataFactory}<br/>Pipeline Details : @{pipeline().Pipeline}<br/>Pipeline Run ID : @{pipeline().RunId}<br/><br/>Thanks,<br/>Team XYZ.",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"devadf": {
+				"type": "string",
+				"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+			},
+			"prodadf": {
+				"type": "string",
+				"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+			}
+		},
+		"variables": {
+			"name": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-02T03:50:37Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
