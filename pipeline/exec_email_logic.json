@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Set variable1",
+				"name": "Set variable",
 				"type": "SetVariable",
 				"dependsOn": [],
 				"userProperties": [],
@@ -58,7 +58,7 @@
 				"type": "WebActivity",
 				"dependsOn": [
 					{
-						"activity": "Set variable1",
+						"activity": "Set variable",
 						"dependencyConditions": [
 							"Succeeded"
 						]
