@@ -1,0 +1,279 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "sureshadf2122"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/exec_email_logic')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set variable",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "name",
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Web1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "logic_app_switch_case",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"devadf": {
+									"value": "@pipeline().parameters.devadf",
+									"type": "Expression"
+								},
+								"prodadf": {
+									"value": "@pipeline().parameters.prodadf",
+									"type": "Expression"
+								},
+								"emailid": {
+									"value": "@pipeline().globalParameters.emailids",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "Hi Suresh,<br/><br/>This is an email from xyz project and the pipeline ran successfully and the data for today has been loaded in the data lake successfully.<br/><br/>Datafactory Name : @{pipeline().DataFactory}<br/>Pipeline Details : @{pipeline().Pipeline}<br/>Pipeline Run ID : @{pipeline().RunId}<br/><br/>Thanks,<br/>Team XYZ.",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Web1",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Set variable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://prod-66.east",
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "@pipeline().parameters.devadf",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Web1",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "logic_app_switch_case",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"devadf": {
+									"value": "@pipeline().parameters.devadf",
+									"type": "Expression"
+								},
+								"prodadf": {
+									"value": "@pipeline().parameters.prodadf",
+									"type": "Expression"
+								},
+								"emailid": {
+									"value": "@pipeline().globalParameters.emailids",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "Hi Suresh,<br/><br/>This is an email from xyz project and the pipeline failed and the data for today has been loaded in the data lake not ingested.<br/><br/>Datafactory Name : @{pipeline().DataFactory}<br/>Pipeline Details : @{pipeline().Pipeline}<br/>Pipeline Run ID : @{pipeline().RunId}<br/><br/>Thanks,<br/>Team XYZ.",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"devadf": {
+						"type": "string",
+						"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+					},
+					"prodadf": {
+						"type": "string",
+						"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+					}
+				},
+				"variables": {
+					"name": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-06-02T03:50:37Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/logic_app_switch_case')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/logic_app_switch_case')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Switch1",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "sureshadf2122",
+									"activities": [
+										{
+											"name": "Web1",
+											"type": "WebActivity",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"url": {
+													"value": "@pipeline().parameters.devadf",
+													"type": "Expression"
+												},
+												"method": "POST",
+												"headers": {},
+												"body": {
+													"value": "{\"email\":\"@{pipeline().parameters.emailid}\",\n\"subject\":\"This is an success email from logic app\",\n\"body\":\"@{pipeline().parameters.body}\"\n}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"value": "sureshadf2122prod",
+									"activities": [
+										{
+											"name": "Web1_copy1",
+											"type": "WebActivity",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"url": {
+													"value": "@pipeline().parameters.prodadf",
+													"type": "Expression"
+												},
+												"method": "POST",
+												"headers": {},
+												"body": {
+													"value": "{\"email\":\"suresh.doma19@gmail.com;madhunarayanavarma@gmail.com\",\n\"subject\":\"This is an success email from logic app\",\n\"body\":\"Hi Suresh,<br/><br/>This is an email from xyz project the data for today has been loaded in the data lake successfully.<br/><br/>Datafactory Name : @{pipeline().DataFactory}<br/>Pipeline Details : @{pipeline().Pipeline}<br/>Pipeline Run ID : @{pipeline().RunId}<br/><br/>Thanks,<br/>Team XYZ.\"\n}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"devadf": {
+						"type": "string",
+						"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+					},
+					"prodadf": {
+						"type": "string",
+						"defaultValue": "https://prod-66.eastus.logic.azure.com:443/workflows/f7ddbc4e51584290bec7f7aaed0d3dc1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MYbR5INyG5YMjcrevIKLslF4X-HLWLMOuGJqeTR23nc"
+					},
+					"emailid": {
+						"type": "string",
+						"defaultValue": "suresh.doma19@gmail.com;madhunarayanavarma@gmail.com"
+					},
+					"body": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"name": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-06-02T03:50:37Z"
+			},
+			"dependsOn": []
+		}
+	]
+}
